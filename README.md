@@ -1,4 +1,4 @@
-# XenKrypt - Post-Quantum File Encryption
+# ClientSideEncryptor
 
 A browser-based, client-side file encryption application using **ML-KEM-768** (post-quantum cryptography) combined with **AES-256-GCM** for quantum-resistant file security.
 

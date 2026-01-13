@@ -87,7 +87,7 @@ export default function Home() {
 					<div className="flex items-center gap-3">
 						<Lock size={32} />
 						<div>
-							<h1 className="text-2xl font-bold">XenKrypt ML-KEM</h1>
+							<h1 className="text-2xl font-bold">ClientSideEncryptor</h1>
 							<p className="text-sm text-blue-100">Post-Quantum File Encryption</p>
 						</div>
 					</div>
