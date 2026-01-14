@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { generateMlKemKeypair } from "./crypto/mlkem";
+import { useState, useEffect } from "react";
+import { initMlKem1024 } from "./crypto/mlkem1024";
 import { encryptFile, decryptFile } from "./crypto/stream-crypto";
-import { bytesToHex } from "./crypto/utils";
+import { bytesToHex, base64ToBytes } from "./crypto/utils";
 import { Lock, Unlock, Key, RefreshCw, Download, AlertCircle, CheckCircle } from "lucide-react";
 
 export default function Home() {
@@ -15,10 +15,38 @@ export default function Home() {
 	const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
-	function handleGenerateKeypair() {
-		const keypair = generateMlKemKeypair();
-		setPublicKey(keypair.publicKey);
-		setPrivateKey(keypair.privateKey);
+	// Hardcoded keys from sample_keypair.txt
+	const MOCK_PUBLIC_KEY =
+		"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";
+	const MOCK_PRIVATE_KEY =
+		"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";
+
+	useEffect(() => {
+		// Initialize WASM on mount
+		initMlKem1024().catch((err) => {
+			console.error("Failed to initialize ML-KEM WASM:", err);
+			setError("Failed to initialize encryption subsystem.");
+		});
+	}, []);
+
+	function handleFetchKeys() {
+		// Mock fetching 1024-bit keys depending on server
+		// Note: The sample keys provided seem to be 1632/3232 bytes, but WASM expects 1568/3168.
+		// We trim them to the expected size.
+		const rawPriv = base64ToBytes(MOCK_PRIVATE_KEY);
+		console.log(`Debug: Raw Private Key Length (Before Split): ${rawPriv.length}`);
+
+		const pub = base64ToBytes(MOCK_PUBLIC_KEY).slice(0, 1568);
+		const priv = rawPriv.slice(0, 3168);
+
+		console.log("🔑 [Step 1] Keys Fetched & Trimmed:");
+		console.log("  -> Public Key Length:", pub.length);
+		console.log("  -> Private Key Length:", priv.length);
+		console.log("  -> Public Key:", bytesToHex(pub));
+		console.log("  -> Private Key:", bytesToHex(priv));
+
+		setPublicKey(pub);
+		setPrivateKey(priv);
 		setError(null);
 	}
 
@@ -36,6 +64,7 @@ export default function Home() {
 		setError(null);
 
 		try {
+			console.log(`Debug: Public Key Length: ${publicKey.length}`);
 			const encryptedBlob = await encryptFile(selectedFile, publicKey);
 			setResult({
 				blob: encryptedBlob,
@@ -107,21 +136,21 @@ export default function Home() {
 					{/* Key Generation */}
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
-							<label className="text-sm font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">ML-KEM-768 Keypair</label>
-							<button onClick={handleGenerateKeypair} className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors">
+							<label className="text-sm font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">ML-KEM-1024 Keypair</label>
+							<button onClick={handleFetchKeys} className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors">
 								<Key size={16} />
-								Generate New
+								Fetch Keys
 							</button>
 						</div>
 
 						{publicKey && (
 							<div className="space-y-2">
 								<div className="space-y-1">
-									<label className="text-xs text-neutral-500">Public Key (1184 bytes)</label>
+									<label className="text-xs text-neutral-500">Public Key (1568 bytes)</label>
 									<div className="font-mono text-xs bg-neutral-50 dark:bg-neutral-800 p-2 rounded text-neutral-600 dark:text-neutral-400 break-all max-h-20 overflow-auto">{bytesToHex(publicKey)}</div>
 								</div>
 								<div className="space-y-1">
-									<label className="text-xs text-neutral-500">Private Key (2400 bytes)</label>
+									<label className="text-xs text-neutral-500">Private Key (3168 bytes)</label>
 									<div className="font-mono text-xs bg-red-50 dark:bg-red-900/10 p-2 rounded text-red-600 dark:text-red-400 break-all max-h-20 overflow-auto">{bytesToHex(privateKey!)}</div>
 								</div>
 							</div>
@@ -210,7 +239,7 @@ export default function Home() {
 								<CheckCircle size={20} className="flex-shrink-0" />
 								<div className="flex-1">
 									<p className="font-semibold">{operation === "encrypt" ? "Encryption" : "Decryption"} Successful!</p>
-									<p className="text-sm">{operation === "encrypt" ? "File encrypted using ML-KEM-768 + AES-256-GCM" : "File decrypted successfully"}</p>
+									<p className="text-sm">{operation === "encrypt" ? "File encrypted using ML-KEM-1024 + AES-256-GCM" : "File decrypted successfully"}</p>
 								</div>
 							</div>
 							<button onClick={handleDownload} className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors">

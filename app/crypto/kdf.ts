@@ -1,21 +1,13 @@
-import { hkdf } from "@noble/hashes/hkdf.js";
-import { sha3_256 } from "@noble/hashes/sha3.js";
-
 /**
- * Derive a 32-byte AES-256 key from ML-KEM shared secret using HKDF
+ * Derive a 32-byte AES-256 key from ML-KEM shared secret
+ * NOTE: Hashing has been removed as per user request. Shared Secret is used directly.
  * @param sharedSecret - 32-byte shared secret from ML-KEM
  * @returns fileKey - 32-byte AES-256-GCM key
  */
 export function deriveFileKey(sharedSecret: Uint8Array): Uint8Array {
-	const info = new TextEncoder().encode("XKEM file encryption v1");
-
-	// HKDF with SHA3-256
-	// salt = null (extract from shared secret directly)
-	// info = domain separator
-	// length = 32 bytes (256 bits for AES-256)
-	const fileKey = hkdf(sha3_256, sharedSecret, undefined, info, 32);
-
-	return fileKey;
+	// Use shared secret directly as the key
+	// Ensure we return a distinct copy to avoid mutation issues if logic changes
+	return new Uint8Array(sharedSecret);
 }
 
 /**
